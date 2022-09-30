@@ -4,7 +4,8 @@ from __future__ import print_function
 import numpy as np
 from scipy.cluster import vq
 from scipy.spatial import cKDTree
-from pytim_dbscan import dbscan_inner
+## modified by Jie
+#from pytim_dbscan import dbscan_inner
 
 
 def determine_samples(threshold_density, cluster_cut, n_neighbors):
@@ -34,10 +35,10 @@ def do_cluster_analysis_dbscan(group,
                                molecular=True):
     """ Performs a cluster analysis using DBSCAN
 
-        :returns [labels,counts,neighbors]: lists of the id of the cluster to
-                                  which every atom is belonging to, of the
-                                  number of elements in each cluster, and of
-                                  the number of neighbors for each atom
+        :returns [labels,counts,neighbors]: lists of the id of the cluster to 
+                                  which every atom is belonging to, of the 
+                                  number of elements in each cluster, and of 
+                                  the number of neighbors for each atom 
                                   according to the specified criterion.
 
         Uses a slightly modified version of DBSCAN from sklearn.cluster
@@ -56,8 +57,8 @@ def do_cluster_analysis_dbscan(group,
 
     neighborhoods = np.array([
         np.array(neighbors)
-        for neighbors in tree.query_ball_point(points, cluster_cut, workers=-1)
-    ],dtype=object)
+        for neighbors in tree.query_ball_point(points, cluster_cut, n_jobs=-1)
+    ])
     if len(neighborhoods.shape) != 1:
         raise ValueError("Error in do_cluster_analysis_DBSCAN(), the cutoff\
                           is probably too small")
@@ -76,6 +77,7 @@ def do_cluster_analysis_dbscan(group,
     counts = np.zeros(points.shape[0], dtype=np.intp)
 
     core_samples = np.asarray(n_neighbors >= min_samples, dtype=np.uint8)
+## modified by Jie
     dbscan_inner(core_samples, neighborhoods, labels, counts)
     return labels, counts, n_neighbors
 

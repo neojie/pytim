@@ -211,10 +211,13 @@ class WillardChandler(Interface):
             self.mesh, box)
         self.spacing, self.ngrid = spacing, ngrid
         grid = utilities.generate_grid_in_box(box, ngrid, order='xyz')
-        kernel, _ = utilities.density_map(pos, grid, self.alpha, box)
+        self.kernel, _ = utilities.density_map(pos, grid, self.alpha, box)
 
-        kernel.pos = pos.copy()
-        self.density_field = kernel.evaluate_pbc_fast(grid)
+        self.kernel.pos = pos.copy()
+        self.grid = grid
+        self.box = box
+        #self.density_field = kernel.evaluate_pbc_fast(grid) #JD
+        self.density_field,self.mass_density_field = self.kernel.evaluate_pbc_fast(self.grid,self.universe.atoms.masses) #JD
 
         # Thomas Lewiner, Helio Lopes, Antonio Wilson Vieira and Geovan
         # Tavares. Efficient implementation of Marching Cubes’ cases with

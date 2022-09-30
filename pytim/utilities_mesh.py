@@ -23,9 +23,11 @@ def generate_grid_in_box(box, npoints, order='zxy'):
     """
     xyz = []
     for i in range(3):
-        xyz.append(np.linspace(0., box[i] - box[i] / npoints[i], npoints[i]))
+        xyz.append(np.linspace(0., box[i] - box[i] / npoints[i], int(npoints[i])))
     if order == 'zyx':
         z, y, x = np.meshgrid(xyz[0], xyz[1], xyz[2], indexing='ij')
+    elif order =='xyz':### added by Jie
+        x, y, z = np.meshgrid(xyz[0], xyz[1], xyz[2], indexing='ij')    
     else:
         x, y, z = np.meshgrid(xyz[2], xyz[1], xyz[0], indexing='ij')
 
