@@ -55,6 +55,10 @@ class WillardChandler(Interface):
                                   mixed interfaces
         :param bool centered:     Center the  :py:obj:`group`
         :param bool warnings:     Print warnings
+        :param level : float, optional
+        Contour value to search for isosurfaces in `volume`. If not
+        given or None, the average of the min and max of vol is used.
+        spacing : length-3 tuple of floats, optional
 
         Example:
 
@@ -109,8 +113,10 @@ class WillardChandler(Interface):
                  centered=False,
                  warnings=False,
                  autoassign=True,
+                 level=None,
                  **kargs):
-
+        ## added by Jie to control control surface value
+        self.level = level
         self.autoassign, self.do_center = autoassign, centered
         sanity = SanityCheck(self, warnings=warnings)
         sanity.assign_universe(universe, group)
@@ -218,18 +224,32 @@ class WillardChandler(Interface):
         self.box = box
         #self.density_field = kernel.evaluate_pbc_fast(grid) #JD
         self.density_field,self.mass_density_field = self.kernel.evaluate_pbc_fast(self.grid,self.universe.atoms.masses) #JD
-
+        # print("here,", self.mass_density_field)
+        ## added by Jie, normalize mass density
+        # NA      = 6.022e23
+        # volume_tot  = self.box[0]*self.box[1]*self.box[2]*1e-24
+        # volume0     = volume_tot/(self.ngrid[-1]*self.ngrid[0]*self.ngrid[1]) # cm^3/mol
+        # norm_factor = sum(self.universe.atoms.masses)/NA/sum(self.mass_density_field*volume0)
+        # self.mass_density_field = self.mass_density_field*norm_factor
+        # print("here1,", self.mass_density_field)
+        
         # Thomas Lewiner, Helio Lopes, Antonio Wilson Vieira and Geovan
         # Tavares. Efficient implementation of Marching Cubes’ cases with
         # topological guarantees. Journal of Graphics Tools 8(2) pp. 1-15
         # (december 2003). DOI: 10.1080/10867651.2003.10487582
-        volume = self.density_field.reshape(
-            tuple(np.array(ngrid[::-1]).astype(int)))
+        # volume = self.density_field.reshape(
+        #     tuple(np.array(ngrid[::-1]).astype(int)))
+        # verts, faces, normals, values = marching_cubes(
+        #     volume, None, spacing=tuple(spacing))
+        self.mass_density_field_reshape = self.mass_density_field.reshape(
+            tuple(np.array(ngrid).astype(int)))
         verts, faces, normals, values = marching_cubes(
-            volume, None, spacing=tuple(spacing))
+            self.mass_density_field_reshape, self.level, spacing=tuple(spacing))
         # note that len(normals) == len(verts): they are normals
         # at the vertices, and not normals of the faces
         # verts and normals have x and z flipped because skimage uses zyx ordering
-        self.triangulated_surface = [np.fliplr(verts), faces, np.fliplr(normals)]
+        # self.triangulated_surface = [np.fliplr(verts), faces, np.fliplr(normals)]
+        self.triangulated_surface = [verts, faces, normals]
+
         self.surface_area = measure.mesh_surface_area(verts, faces)
         verts += spacing[::-1] / 2.

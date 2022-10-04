@@ -18,7 +18,7 @@ except ImportError:
     from scipy.spatial import Delaunay
 
 from .interface import Interface
-from .patches import patchTrajectory, PatchOpenMM, PatchMDTRAJ
+from .patches import patchTrajectory, patchOpenMM, patchMDTRAJ
 #modified by Jie
 #from circumradius import circumradius
 

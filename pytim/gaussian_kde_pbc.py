@@ -14,12 +14,12 @@ class gaussian_kde_pbc(gaussian_kde):
 
     def evaluate_pbc_fast(self, points,atomic_masses):
         grid = points
+        
         pos = self.pos
         box = self.box
         d = self.sigma * 2.5
 #        print("d is",d)
 #        d = self.sigma
-
         results = np.zeros(grid.shape[1], dtype=float)
         results2 = np.zeros(grid.shape[1], dtype=float)
         gridT = grid.T[:]
@@ -40,11 +40,16 @@ class gaussian_kde_pbc(gaussian_kde):
             cond = np.where(dr < -box / 2.)
             dr[cond] += box[cond[1]]
             #make sure dr not exceed half the box
-            dens = np.exp(-np.sum(dr * dr, axis=1) / scale)
+            dens      = np.exp(-np.sum(dr * dr, axis=1) / scale)
             mass_dens = np.exp(-np.sum(dr * dr, axis=1) / scale)*atomic_masses[n]
             results[ind] += dens
             results2[ind] += mass_dens
-
+        NA      = 6.022e23
+        volume_tot  = self.box[0]*self.box[1]*self.box[2]*1e-24 # cm^3
+        volume0     = volume_tot/len(results) # cm^3/mol
+        norm_factor = sum(atomic_masses)/NA/sum(results2*volume0)
+        results2 = results2*norm_factor
+        
         return results,results2
 
     
